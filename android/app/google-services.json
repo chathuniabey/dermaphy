@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "947083927026",
+    "project_id": "dermaphy-004",
+    "storage_bucket": "dermaphy-004.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:947083927026:android:bdf4c2330af303711e9f6b",
+        "android_client_info": {
+          "package_name": "com.example.dermaphy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBXDLNcHGUqsdXYZkRHSLXn7qRo4XaN1U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

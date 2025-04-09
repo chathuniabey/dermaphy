@@ -61,7 +61,7 @@ class _DiseaseSurveyPageState extends State<DiseaseSurveyPage>
 
       final data = json.decode(response.body);
       final surveyPrediction = data['predicted_disease'];
-      final surveyConfidence = data['confidence'] * 1.0;
+      final surveyConfidence = data['confidence'] * 100.0;
 
       bool isMatch = surveyPrediction == widget.imagePrediction;
 
@@ -71,12 +71,14 @@ class _DiseaseSurveyPageState extends State<DiseaseSurveyPage>
         ? ((imageConf * 0.8 + surveyConfidence * 0.2).toStringAsFixed(2))
         : imageConf.toStringAsFixed(2);
 
+      String finalPerdiction = isMatch ? surveyPrediction : widget.imagePrediction;
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ResultPage(
             imageFile: widget.imageFile,
-            diseaseName: surveyPrediction,
+            diseaseName: finalPerdiction,
             confidence: finalConfidence,
             showBoth: !isMatch,
             imagePrediction: widget.imagePrediction,

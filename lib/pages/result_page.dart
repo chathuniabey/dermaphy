@@ -39,7 +39,7 @@ class ResultPage extends StatelessWidget {
               children: [
                 Padding(
                   padding: EdgeInsets.all(16),
-                  child: Text('Predicted Disease', style: TextStyle(fontSize: 18)),
+                  child: Text('Final Predicted Disease', style: TextStyle(fontSize: 18)),
                 ),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
@@ -49,24 +49,42 @@ class ResultPage extends StatelessWidget {
                 Text('Skin Disease', style: TextStyle(fontSize: 16)),
                 SizedBox(height: 4),
                 Text(
-                  imagePrediction!,
+                  diseaseName,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Confidence: ${(confidence)}",
+                  "Final Confidence: $confidence%",
                   style: TextStyle(fontSize: 18, color: Colors.green),
                 ),
+
+                SizedBox(height: 20),
+                Divider(),
+                Text("🔍 Image Prediction: ${imagePrediction ?? 'N/A'}", style: TextStyle(fontSize: 16)),
+                Text("Confidence: ${imageConfidence ?? 'N/A'}%"),
+                SizedBox(height: 10),
+                Text("📝 Survey Prediction: ${surveyPrediction ?? 'N/A'}", style: TextStyle(fontSize: 16)),
+                Text("Confidence: ${(surveyConfidence ?? 0.0 * 100).toStringAsFixed(2)}%"),
+
                 if (showBoth) ...[
-                  SizedBox(height: 20),
-                  Divider(),
-                  Text("Image Prediction: ${imagePrediction ?? 'N/A'}", style: TextStyle(fontSize: 16)),
-                  Text("Confidence: ${(imageConfidence)}"),
                   SizedBox(height: 10),
-                  Text("Survey Prediction: ${surveyPrediction ?? 'N/A'}", style: TextStyle(fontSize: 16)),
-                  Text("Confidence: ${(surveyConfidence ?? 0.0 * 100).toStringAsFixed(2)}"),
+                  Text(
+                    "⚠️ The predictions from the image and questionnaire do not match.",
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      "We recommend consulting a medical professional for an accurate diagnosis.",
+                      style: TextStyle(color: Colors.black87),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ],
-                SizedBox(height: 16),
+
+
+                SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),

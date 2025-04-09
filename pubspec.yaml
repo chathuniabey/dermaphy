@@ -77,6 +77,7 @@ flutter:
     - lib/assets/symptoms/folds.png
     - lib/assets/symptoms/swelling.png
     - lib/assets/symptoms/ring.png
+    - lib/assets/symptoms/pain.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

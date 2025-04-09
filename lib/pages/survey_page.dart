@@ -39,7 +39,7 @@ class _DiseaseSurveyPageState extends State<DiseaseSurveyPage>
     {"key": "Dry/Cracked Skin", "label": "Is your skin dry or cracked?", "type": "bool", "image": "lib/assets/symptoms/dry.png"},
     {"key": "Folds Appearance", "label": "Does it appear in skin folds?", "type": "bool", "image": "lib/assets/symptoms/folds.png"},
     {"key": "Swelling", "label": "Do you have swelling?", "type": "bool", "image": "lib/assets/symptoms/swelling.png"},
-    {"key": "Painful Lesions", "label": "Are there painful lesions?", "type": "bool", "image": "assets/symptoms/pain.jpg"},
+    {"key": "Painful Lesions", "label": "Are there painful lesions?", "type": "bool", "image": "lib/assets/symptoms/pain.png"},
     {"key": "Lesion Size", "label": "What is the lesion size?", "type": "select", "options": ["Small", "Medium", "Large"], "values": [1, 2, 3]},
     {"key": "Duration", "label": "How long have you had this?", "type": "select", "options": ["< 2 weeks", "2–6 weeks", "> 6 weeks"], "values": [1, 2, 3]},
     {"key": "Severity Level", "label": "What is the severity level?", "type": "select", "options": ["Mild", "Moderate", "Severe"], "values": [1, 2, 3]},

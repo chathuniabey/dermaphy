@@ -137,13 +137,13 @@ class _UploadPageState extends State<UploadPage> {
                 onPressed: () => _pickImage(ImageSource.gallery),
                 icon: Icon(Icons.upload),
                 label: Text("Open gallery"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               ),
               ElevatedButton.icon(
                 onPressed: () => _pickImage(ImageSource.camera),
                 icon: Icon(Icons.camera_alt),
                 label: Text("Take photo"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               ),
             ],
           )

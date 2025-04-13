@@ -47,54 +47,49 @@ class _DiseaseSurveyPageState extends State<DiseaseSurveyPage>
   ];
 
   Future<void> _submit() async {
-    setState(() => isLoading = true);
+  setState(() => isLoading = true);
 
-    try {
-      print("Sending responses: ${json.encode(responses)}");
+  try {
+    print("Sending responses: ${json.encode(responses)}");
 
-      final url = Uri.parse("https://us-east1-dermaphy.cloudfunctions.net/predict_skin_disease_nlp");
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(responses),
-      );
+    final url = Uri.parse("https://us-east1-dermaphy.cloudfunctions.net/predict_skin_disease_nlp2");
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(responses),
+    );
 
-      final data = json.decode(response.body);
-      final surveyPrediction = data['predicted_disease'];
-      final surveyConfidence = data['confidence'] * 100.0;
+    final data = json.decode(response.body); // now a map with disease → confidence
+    print("Survey response: $data");
 
-      bool isMatch = surveyPrediction == widget.imagePrediction;
+    final String imagePred = widget.imagePrediction;
+    final double? surveyConfidence = (data[imagePred] as num?)?.toDouble();
 
-      final imageConf = double.parse(widget.imageConfidence.replaceAll('%', ''));
+    final double imageConf = double.parse(widget.imageConfidence.replaceAll('%', ''));
+    final bool isMatch = surveyConfidence != null;
 
-      String finalConfidence = isMatch
-        ? ((imageConf * 0.8 + surveyConfidence * 0.2).toStringAsFixed(2))
+    final String finalDisease = imagePred;
+    final String finalConfidence = isMatch
+        ? (imageConf * 0.8 + surveyConfidence * 100 * 0.2).toStringAsFixed(2)
         : imageConf.toStringAsFixed(2);
 
-      String finalPerdiction = isMatch ? surveyPrediction : widget.imagePrediction;
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ResultPage(
-            imageFile: widget.imageFile,
-            diseaseName: finalPerdiction,
-            confidence: finalConfidence,
-            showBoth: !isMatch,
-            imagePrediction: widget.imagePrediction,
-            surveyPrediction: surveyPrediction,
-            imageConfidence: widget.imageConfidence,
-            surveyConfidence: surveyConfidence,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultPage(
+          imageFile: widget.imageFile,
+          diseaseName: finalDisease,
+          confidence: finalConfidence,
         ),
-      );
-    } catch (e) {
-      print("Error submitting survey: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting survey')));
-    } finally {
-      setState(() => isLoading = false);
-    }
+      ),
+    );
+  } catch (e) {
+    print("Error submitting survey: $e");
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting survey')));
+  } finally {
+    setState(() => isLoading = false);
   }
+}
 
   Widget _buildQuestionCard(Map<String, dynamic> question) {
     return FadeTransition(

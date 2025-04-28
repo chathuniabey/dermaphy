@@ -39,7 +39,7 @@ class _UploadPageState extends State<UploadPage> {
       if (result != null) {
         final accuracy = double.parse(result['Accuracy'].toString().replaceAll('%', '')) ?? 0;
 
-        if (accuracy > 75) {
+        if (accuracy > 90) {
           Navigator.push(
             context,
             MaterialPageRoute(

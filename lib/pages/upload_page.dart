@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import 'survey_page.dart';
+import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -19,89 +20,117 @@ class _UploadPageState extends State<UploadPage> {
     final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
-      final file = File(pickedFile.path);
       setState(() {
-        _selectedImage = file;
+        _selectedImage = File(pickedFile.path);
       });
+    }
+  }
 
-      // ⏳ Show loading
+  Future<void> _onContinue() async {
+    if (_selectedImage == null) return;
+
+    bool isValid = await _checkIfSkinImage(_selectedImage!);
+
+    if (!isValid) {
       showDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (_) => Center(child: CircularProgressIndicator()),
+        builder: (context) => AlertDialog(
+          title: Text("Invalid Image"),
+          content: Text("The image does not appear to show a skin condition. "
+              "Please upload a clear image of the affected skin area."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("OK"),
+            )
+          ],
+        ),
       );
+      return;
+    }
 
-      final result = await ApiService.predictDisease(file);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(child: CircularProgressIndicator()),
+    );
 
-      // ✅ Dismiss loading
-      Navigator.of(context).pop();
+    final result = await ApiService.predictDisease(_selectedImage!);
 
-      if (result != null) {
-        final accuracy = double.parse(result['Accuracy'].toString().replaceAll('%', '')) ?? 0;
+    Navigator.of(context).pop(); // Close loader
 
-        if (accuracy > 90) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DiseaseSurveyPage(
-                imageFile: file,
-                imagePrediction: result['Results'],
-                imageConfidence: result['Accuracy'],
-              ),
+    if (result != null) {
+      final accuracy = double.tryParse(result['Accuracy'].toString().replaceAll('%', '')) ?? 0;
+
+      if (accuracy > 50) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DiseaseSurveyPage(
+              imageFile: _selectedImage!,
+              imagePrediction: result['Results'],
+              imageConfidence: result['Accuracy'],
             ),
-          );
-        } else {
-          // ⚠️ Show dialog if accuracy is too low
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Text("Low Confidence"),
-              content: Text(
-                "The confidence level for this prediction is too low. "
-                "This may be due to poor image quality or unclear skin details.\n\n"
-                "Please try uploading a clearer image for better results.",
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _pickImage(source); // retry logic
-                  },
-                  child: Text("Re-upload", style: TextStyle(color: Colors.green)),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text("Cancel", style: TextStyle(color: Colors.grey)),
-                ),
-              ],
-            ),
-          );
-        }
-      } else {
-        // ❌ Error dialog with retry
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Prediction Failed"),
-            content: Text("There was a problem sending your image. Please try again."),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _pickImage(source); // Retry
-                },
-                child: Text("Retry"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text("Cancel"),
-              ),
-            ],
           ),
         );
+      } else {
+        _showLowConfidenceDialog();
+      }
+    } else {
+      _showPredictionFailedDialog();
+    }
+  }
+
+  void _showLowConfidenceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Low Confidence"),
+        content: Text("The prediction confidence is too low. Try using a clearer skin image."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("Cancel"),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showPredictionFailedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Prediction Failed"),
+        content: Text("Something went wrong. Please try again."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("OK"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _checkIfSkinImage(File file) async {
+    final inputImage = InputImage.fromFile(file);
+    final labeler = ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.5));
+    final labels = await labeler.processImage(inputImage);
+
+    for (final label in labels) {
+      final text = label.label.toLowerCase();
+      if (text.contains('skin') ||
+          text.contains('dermatology') ||
+          text.contains('rash') ||
+          text.contains('eczema') ||
+          text.contains('psoriasis') ||
+          text.contains('disease') ||
+          text.contains('infection')) {
+        return true;
       }
     }
+    return false;
   }
 
   @override
@@ -130,23 +159,49 @@ class _UploadPageState extends State<UploadPage> {
             ),
           ),
           SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () => _pickImage(ImageSource.gallery),
-                icon: Icon(Icons.upload),
-                label: Text("Open gallery"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _pickImage(ImageSource.camera),
-                icon: Icon(Icons.camera_alt),
-                label: Text("Take photo"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              ),
-            ],
-          )
+          if (_selectedImage == null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _pickImage(ImageSource.gallery),
+                  icon: Icon(Icons.upload),
+                  label: Text("Open Gallery"),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _pickImage(ImageSource.camera),
+                  icon: Icon(Icons.camera_alt),
+                  label: Text("Take Photo"),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => setState(() => _selectedImage = null),
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  label: Text("Delete", style: TextStyle(color: Colors.red)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white,),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _onContinue,
+                  icon: Icon(Icons.check_circle, color: Colors.green),
+                  label: Text("Continue", style: TextStyle(color: Colors.green)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white,),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
